@@ -16,7 +16,7 @@ const Home: React.FC = () => {
       <Suspense fallback={<Loading />}>
         <Card className="w-full max-w-2xl bg-gray-900 shadow-2xl rounded-2xl border-none">
           <CardHeader>
-            <CardTitle className="text-center text-4xl md:text-5xl font-bold leading-tight">
+            <CardTitle className="text-center text-4xl md:text-5xl font-bold text-gray-100 leading-tight">
               ⚡ Quick Transaction Portal
             </CardTitle>
             <p className="text-center text-gray-400 mt-3 text-base md:text-lg">
