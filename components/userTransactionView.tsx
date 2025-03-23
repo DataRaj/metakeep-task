@@ -1,13 +1,8 @@
 "use client";
 
+import { MetaKeep } from "metakeep";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-
-declare global {
-  interface Window {
-    MetaKeep?: any;
-  }
-}
 
 const UserView: React.FC = () => {
   const [contractAddress, setContractAddress] = useState("");
@@ -16,23 +11,23 @@ const UserView: React.FC = () => {
   const [abi, setAbi] = useState<any[]>([]);
   const [selectedFunction, setSelectedFunction] = useState<any | null>(null);
   const [paramValues, setParamValues] = useState<{ [key: string]: string }>({});
-  const [sdk, setSdk] = useState<any>(null);
+  const [sdk, setSdk] = useState<MetaKeep | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     parseUrlParams();
-    if (window.MetaKeep) {
-      try {
-        const instance = new window.MetaKeep({
-          appId: process.env.NEXT_PUBLIC_METAKEEP_ID,
-        });
-        setSdk(instance);
-      } catch {
-        setStatusMessage("❌ MetaKeep initialization failed. Check App ID.");
-      }
-    } else {
-      setStatusMessage("❌ MetaKeep not loaded. Ensure SDK script is present.");
+    try {
+      const instance = new MetaKeep({
+        appId: process.env.NEXT_PUBLIC_METAKEEP_ID!,
+      });
+      setSdk(instance,);
+      instance.getWallet().then((user) => {
+        console.log("✅ MetaKeep user loaded:", user);
+      });
+    } catch (err) {
+      console.error("❌ MetaKeep init failed", err);
+      setStatusMessage("❌ MetaKeep initialization failed. Check App ID.");
     }
   }, []);
 
@@ -78,13 +73,13 @@ const UserView: React.FC = () => {
     setStatusMessage("Signing and submitting transaction...");
 
     try {
-      await sdk.transact({
+      await sdk.signTransaction({
         chainId: Number(chainId),
         rpcUrl,
         contract: contractAddress,
         functionName: selectedFunction.name,
         args: Object.values(paramValues),
-      });
+      }, "eth_signTypedData_v4");
 
       setStatusMessage("✅ Transaction submitted successfully.");
     } catch (err: any) {
