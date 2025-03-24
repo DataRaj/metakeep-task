@@ -1,5 +1,5 @@
 // pages/api/telemetry/stats.ts
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, QueryCommandInput } from "@aws-sdk/client-dynamodb";
 import { QueryCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import type { NextApiRequest, NextApiResponse } from 'next';
 
@@ -55,20 +55,21 @@ export default async function handler(
     // For production, you would want to create a proper GSI in your DynamoDB table
 
     // Query params based on whether we're filtering by page
-    const queryParams = {
+    const queryParams: QueryCommandInput = {
       TableName: TELEMETRY_TABLE,
       // Use appropriate GSI or local index
       IndexName: "minuteTimestamp-index", // You need to create this GSI on your table
       KeyConditionExpression: "minuteTimestamp >= :startTime",
       ExpressionAttributeValues: {
-        ":startTime": startTime.toISOString(),
+        ":startTime": { S: startTime.toISOString() },
       },
     };
 
     // If specific page is requested, add FilterExpression
     if (page !== 'all') {
       queryParams.FilterExpression = "page = :page";
-      queryParams.ExpressionAttributeValues[":page"] = page;
+      queryParams.ExpressionAttributeValues = queryParams.ExpressionAttributeValues || {};
+      queryParams.ExpressionAttributeValues[":page"] = { S: Array.isArray(page) ? page[0] : page };
     }
 
     const result = await docClient.send(new QueryCommand(queryParams));

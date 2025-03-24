@@ -117,8 +117,8 @@ const home = () => {
                 tick={{ fontSize: 12 }}
               />
               <Tooltip 
-                formatter={(value) => [`${value} views`, 'Page Views']}
-                labelFormatter={(label) => new Date(label).toLocaleString()}
+                formatter={(value: any) => [`${value} views`, 'Page Views']}
+                labelFormatter={(label: string | number | Date) => new Date(label).toLocaleString()}
               />
               <Legend />
               <Line

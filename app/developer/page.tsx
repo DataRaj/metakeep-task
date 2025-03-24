@@ -48,7 +48,7 @@ const DeveloperView = () => {
     // Initialize parameters
     if (func && func.inputs) {
       const newParams: {[key: string]: string} = {};
-      func.inputs.forEach(input => {
+      func.inputs.forEach((input: { name: string | number; }) => {
         newParams[input.name] = "";
       });
       setParams(newParams);
@@ -57,6 +57,9 @@ const DeveloperView = () => {
     }
   };
 
+
+  console.log(selectedFunction)
+  console.log(` parsedAbi ${parsedAbi.length }`)
   const handleParamChange = (name: string, value: string) => {
     setParams({...params, [name]: value});
   };

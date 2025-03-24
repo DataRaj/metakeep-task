@@ -27,19 +27,23 @@ const UserTransaction: React.FC = () => {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    // Record page load for telemetry (this would call your backend API)
     recordPageLoad();
-
-    // Parse URL parameters
     parseUrlParams();
-
-    // Initialize MetaKeep SDK
     initMetaKeep();
-  }, []);
+    
+    // Safety timeout to prevent UI from being stuck in loading state
+    const safetyTimeout = setTimeout(() => {
+      if (!initialized) {
+        setInitialized(true);
+        setStatusMessage("⚠️ MetaKeep initialization timed out. You may need to refresh the page.");
+      }
+    }, 10000); // 10 second timeout
+    
+    return () => clearTimeout(safetyTimeout);
+  }, [initialized]);
 
   const recordPageLoad = async () => {
     try {
-      // Call your telemetry API endpoint
       await fetch('/api/telemetry', {
         method: 'POST',
         headers: {
@@ -111,7 +115,8 @@ const UserTransaction: React.FC = () => {
 
   const initMetaKeep = async () => {
     try {
-      const appId = process.env.NEXT_PUBLIC_METAKEEP_ID;
+      const appId = "3122c75e-8650-4a47-8376-d1dda7ef8c58";
+      console.log("MetaKeep App ID:", appId);
       if (!appId) {
         throw new Error("MetaKeep App ID not configured");
       }
