@@ -97,9 +97,9 @@ export async function GET(req: NextRequest) {
 }
 
 // POST handler for recording telemetry data
-export async function POST(req: NextApiRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { page, timestamp } = req.body;
+    const { page, timestamp } = await req.json();
     
     if (!page) {
       return NextResponse.json({ message: 'Page parameter is required' });
