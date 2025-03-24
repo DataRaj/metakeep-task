@@ -1,7 +1,8 @@
 // pages/api/telemetry/stats.ts
 import { DynamoDBClient, QueryCommandInput } from "@aws-sdk/client-dynamodb";
-import { QueryCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { QueryCommand, DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse } from "next/server";
 
 // Initialize the DynamoDB client
 const client = new DynamoDBClient({
@@ -22,14 +23,8 @@ interface TelemetryEntry {
   count?: number;
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
+// GET handler for retrieving telemetry stats
+export async function GET(req: NextApiRequest) {
   try {
     const { range = 'hour', page = 'all' } = req.query;
     
@@ -50,9 +45,6 @@ export default async function handler(
       default:
         startTime.setHours(now.getHours() - 1); // Default to hour
     }
-
-    // Create GSI for minuteTimestamp and potentially a page filter
-    // For production, you would want to create a proper GSI in your DynamoDB table
 
     // Query params based on whether we're filtering by page
     const queryParams: QueryCommandInput = {
@@ -95,12 +87,50 @@ export default async function handler(
     // Ensure there are data points for every minute/hour/day in the range
     const filledData = fillMissingTimepoints(statsData, startTime, now, range as string);
     
-    return res.status(200).json(filledData);
+    return NextResponse.json(filledData);
   } catch (error) {
     console.error('Error fetching telemetry stats:', error);
-    return res.status(500).json({ message: 'Failed to fetch telemetry stats' });
+    return NextResponse.json({ message: 'Failed to fetch telemetry stats' });
   }
 }
+
+// POST handler for recording telemetry data
+export async function POST(req: NextApiRequest) {
+  try {
+    const { page, timestamp } = req.body;
+    
+    if (!page) {
+      return NextResponse.json({ message: 'Page parameter is required' });
+    }
+    
+    const now = timestamp ? new Date(timestamp) : new Date();
+    
+    // Format the minuteTimestamp (for aggregation)
+    const minuteDate = new Date(now);
+    minuteDate.setSeconds(0, 0); // Zero out seconds and milliseconds
+    const minuteTimestamp = minuteDate.toISOString();
+    
+    // Create a telemetry entry
+    const telemetryEntry: TelemetryEntry = {
+      page,
+      timestamp: now.toISOString(),
+      minuteTimestamp,
+    };
+    
+    // Save to DynamoDB
+    const putCommand = new PutCommand({
+      TableName: TELEMETRY_TABLE,
+      Item: telemetryEntry,
+    });
+    await docClient.send(putCommand);
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error recording telemetry:', error);
+    return NextResponse.json({ message: 'Failed to record telemetry' });
+  }
+}
+
 
 // Helper function to fill in missing time points with zero values
 function fillMissingTimepoints(
