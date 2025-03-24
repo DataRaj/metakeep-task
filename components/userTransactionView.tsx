@@ -193,7 +193,7 @@ const UserTransaction: React.FC = () => {
   }
 
   return (
-    <div className="p-8 max-w-xl mx-auto bg-white rounded-xl shadow border mt-10">
+    <div className="p-8 max-w-xl mx-auto bg-white rounded-xl text-gray-900  shadow border mt-10">
       <h1 className="text-2xl font-bold mb-4">🚀 Execute Smart Contract Function</h1>
       
       <div className="mb-6 space-y-4">

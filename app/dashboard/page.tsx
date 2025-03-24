@@ -30,7 +30,7 @@ const home = () => {
   const fetchTelemetryData = async (range: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/telemetry/stats?range=${range}`);
+      const response = await fetch(`/api/telemetry?range=${range}`);
       if (!response.ok) {
         throw new Error('Failed to fetch telemetry data');
       }

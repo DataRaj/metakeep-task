@@ -42,6 +42,9 @@ const Home: React.FC = () => {
       <footer className="mt-10 text-sm text-gray-500">
         Crafted with ❤️ using MetaKeep SDK & Next-gen design principles.
       </footer>
+      <Button className=" border-[2px] absolute top-0 right-0 border-gray-100 shadow-amber-50 shadow-md px-10 py-6 mt-4 mr-10 bg-gray-950 text-gray-100 hover:bg-gray-800 font-serif text-lg font-semibold italic capitalize hover:shadow-lg transition-all duration-300">
+        <Link href="/dashboard">DASHBOARD</Link>
+      </Button>
     </div>
   );
 };
