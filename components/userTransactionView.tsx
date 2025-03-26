@@ -69,6 +69,15 @@ const UserTransaction: React.FC = () => {
     const abiEncoded = urlParams.get("abi");
     const functionData = urlParams.get("func");
 
+    console.log("URL Params:", {
+      contractParam,
+      chainIdParam,
+      rpcUrlParam,
+      abiEncoded,
+      functionData,
+    }
+    )
+
     if (!contractParam || !chainIdParam || !rpcUrlParam || !abiEncoded) {
       return setStatusMessage("❌ Missing required parameters in URL");
     }
@@ -115,24 +124,29 @@ const UserTransaction: React.FC = () => {
 
   const initMetaKeep = async () => {
     try {
-      const appId = "3122c75e-8650-4a47-8376-d1dda7ef8c58";
-      console.log("MetaKeep App ID:", appId);
+      const appId = process.env.METAKEEP_ID;
       if (!appId) {
         throw new Error("MetaKeep App ID not configured");
       }
-
-      const instance = new MetaKeep({
-        appId: appId,
-      });
-      
+  
+      const instance = new MetaKeep({ appId });
       setSdk(instance);
       
       const user = await instance.getWallet();
       console.log("✅ MetaKeep user loaded:", user);
       setInitialized(true);
-    } catch (err) {
-      console.error("❌ MetaKeep init failed", err);
-      setStatusMessage("❌ MetaKeep initialization failed. Check App ID configuration.");
+    } catch (err: any) {
+      console.error("MetaKeep init failed", err);
+      
+      // Specific handling for cancellation
+      if (err.status === "OPERATION_CANCELLED") {
+        setStatusMessage("⚠️ Wallet initialization cancelled. Please try again.");
+      } else {
+        setStatusMessage("❌ MetaKeep initialization failed. Check App ID configuration.");
+      }
+      
+      // Mark as initialized anyway to unblock UI
+      setInitialized(true); 
     }
   };
 
@@ -178,16 +192,31 @@ const UserTransaction: React.FC = () => {
   if (!initialized) {
     return (
       <div className="p-8 max-w-xl mx-auto bg-white rounded-xl text-gray-900 shadow border mt-10">
-        <h1 className="text-2xl font-bold mb-4">Initializing MetaKeep...</h1>
-        <div className="animate-pulse flex space-x-4">
-          <div className="flex-1 space-y-6 py-1">
-            <div className="h-4 bg-gray-300 rounded"></div>
-            <div className="space-y-3">
+        <h1 className="text-2xl font-bold mb-4">Initializing MetaKeep Wallet</h1>
+        {statusMessage ? (
+          <div className="mb-4 p-3 bg-yellow-50 text-yellow-700 rounded-lg">
+            {statusMessage}
+            <button 
+              onClick={initMetaKeep}
+              className="ml-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className="animate-pulse flex space-x-4">
+            <div className="flex-1 space-y-6 py-1">
               <div className="h-4 bg-gray-300 rounded"></div>
-              <div className="h-4 bg-gray-300 rounded"></div>
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-300 rounded"></div>
+                <div className="h-4 bg-gray-300 rounded"></div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+        <p className="text-sm text-gray-500 mt-4">
+          A verification window should appear. If it doesn't, check your popup blocker settings.
+        </p>
       </div>
     );
   }

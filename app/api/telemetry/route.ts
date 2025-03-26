@@ -51,14 +51,13 @@ export async function GET(req: NextRequest) {
     // Query params based on whether we're filtering by page
     const queryParams: QueryCommandInput = {
       TableName: TELEMETRY_TABLE,
-      // Use appropriate GSI or local index
-      IndexName: "minuteTimestamp-index", // You need to create this GSI on your table
-      KeyConditionExpression: "minuteTimestamp >= :startTime",
+      KeyConditionExpression: "page = :page AND minuteTimestamp >= :startTime",
       ExpressionAttributeValues: {
+        ":page": { S: page },
         ":startTime": { S: startTime.toISOString() },
       },
     };
-
+    
     // If specific page is requested, add FilterExpression
     if (page !== 'all') {
       queryParams.FilterExpression = "page = :page";
